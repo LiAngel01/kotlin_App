@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AOD App</string>
+    <string name="aod_enabled">Always On Display: Enabled</string>
+    <string name="aod_disabled">Always On Display: Disabled</string>
+    <string name="enable_aod">Enable Always On Display</string>
+    <string name="instructions">Tap the button above to open system settings.\nEnable \"AOD App\" as your screensaver/dream.</string>
+</resources>
