@@ -1,75 +1,115 @@
 package com.aodapp
 
-import android.service.dreams.DreamService
-import android.view.View
-import android.widget.TextView
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.view.WindowManager
+import androidx.core.app.NotificationCompat
 
-class AODService : DreamService() {
+class AODService : Service() {
 
-    private lateinit var timeText: TextView
-    private lateinit var dateText: TextView
-    private lateinit var batteryText: TextView
-    private val updateRunnable = object : Runnable {
-        override fun run() {
-            updateTimeAndDate()
-            batteryText.postDelayed(this, 60000) // Update every minute
+    private var aodReceiver: ScreenOffReceiver? = null
+    private var aodActivity: AODActivity? = null
+
+    companion object {
+        const val CHANNEL_ID = "AODServiceChannel"
+        const val NOTIFICATION_ID = 1
+        const val ACTION_STOP_AOD = "com.aodapp.STOP_AOD"
+        
+        fun start(context: Context) {
+            val intent = Intent(context, AODService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+        
+        fun stop(context: Context) {
+            context.stopService(Intent(context, AODService::class.java))
         }
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-
-        // Configure the dream
-        setContentView(R.layout.aod_layout)
-        
-        // Find views
-        timeText = findViewById(R.id.aodTime)
-        dateText = findViewById(R.id.aodDate)
-        batteryText = findViewById(R.id.aodBattery)
-
-        // Allow tapping to wake up
-        setInteractive(true)
-        
-        // Don't show system UI
-        setFullscreen(true)
-
-        // Start updating time
-        updateTimeAndDate()
-        timeText.post(updateRunnable)
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, createNotification())
+        registerScreenOffReceiver()
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        timeText.removeCallbacks(updateRunnable)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP_AOD) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        return START_STICKY
     }
 
-    private fun updateTimeAndDate() {
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
+    override fun onBind(intent: Intent?): IBinder? = null
 
-        val now = Date()
-        timeText.text = timeFormat.format(now)
-        dateText.text = dateFormat.format(now)
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(aodReceiver)
+        AODActivity.close()
+    }
 
-        // Update battery if available
-        val batteryIntent = registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
-        val level = batteryIntent?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
-        val scale = batteryIntent?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
-        
-        if (level >= 0 && scale > 0) {
-            val battery = (level * 100) / scale
-            batteryText.text = "$battery%"
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "AOD Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Keeps AOD active"
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
         }
     }
 
-    override fun onDreamingStarted() {
-        super.onDreamingStarted()
+    private fun createNotification(): Notification {
+        val stopIntent = Intent(this, AODService::class.java).apply {
+            action = ACTION_STOP_AOD
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("AOD Active")
+            .setContentText("Always On Display is running")
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopPendingIntent)
+            .setOngoing(true)
+            .build()
     }
 
-    override fun onDreamingStopped() {
-        super.onDreamingStopped()
+    private fun registerScreenOffReceiver() {
+        aodReceiver = ScreenOffReceiver()
+        val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(aodReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(aodReceiver, filter)
+        }
+    }
+
+    inner class ScreenOffReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_SCREEN_OFF) {
+                AODActivity.show(context)
+            }
+        }
     }
 }

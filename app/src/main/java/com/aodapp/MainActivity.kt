@@ -1,84 +1,98 @@
 package com.aodapp
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        const val CHANNEL_ID = "aod_service_channel"
-    }
-
     private lateinit var statusText: TextView
-    private lateinit var enableAODButton: Button
+    private lateinit var toggleButton: Button
+    
+    private var isAODEnabled = false
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            toggleAOD()
+        } else {
+            Toast.makeText(this, "Notification permission required for AOD", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        statusText = findViewById(R.id.statusText)
-        enableAODButton = findViewById(R.id.enableAODButton)
-
-        createNotificationChannel()
+        
+        setupViews()
         updateStatus()
+    }
 
-        enableAODButton.setOnClickListener {
-            openAODSettings()
+    private fun setupViews() {
+        statusText = findViewById(R.id.statusText)
+        toggleButton = findViewById(R.id.toggleButton)
+        
+        toggleButton.setOnClickListener {
+            checkPermissionAndToggle()
+        }
+    }
+
+    private fun checkPermissionAndToggle() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this, 
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    toggleAOD()
+                }
+                else -> {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            toggleAOD()
+        }
+    }
+
+    private fun toggleAOD() {
+        if (isAODEnabled) {
+            AODService.stop(this)
+            isAODEnabled = false
+            Toast.makeText(this, "AOD Disabled", Toast.LENGTH_SHORT).show()
+        } else {
+            AODService.start(this)
+            isAODEnabled = true
+            Toast.makeText(this, "AOD Enabled - Lock screen to see it", Toast.LENGTH_LONG).show()
+        }
+        updateStatus()
+    }
+
+    private fun updateStatus() {
+        statusText.text = if (isAODEnabled) {
+            "Status: Active\nTap button to disable"
+        } else {
+            "Status: Inactive\nTap button to enable"
+        }
+        
+        toggleButton.text = if (isAODEnabled) {
+            "Disable AOD"
+        } else {
+            "Enable AOD"
         }
     }
 
     override fun onResume() {
         super.onResume()
         updateStatus()
-    }
-
-    private fun updateStatus() {
-        val isAODEnabled = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.SCREENSAVER_ENABLED
-        ) == "1"
-
-        if (isAODEnabled) {
-            statusText.text = getString(R.string.aod_enabled)
-            statusText.setTextColor(getColor(R.color.green))
-        } else {
-            statusText.text = getString(R.string.aod_disabled)
-            statusText.setTextColor(getColor(R.color.red))
-        }
-    }
-
-    private fun openAODSettings() {
-        try {
-            // Open Dreams settings (AOD)
-            startActivity(Intent(Settings.ACTION_DREAM_SETTINGS))
-        } catch (e: Exception) {
-            // Fallback to screensaver settings
-            startActivity(Intent(Settings.ACTION_SCREENSAVER_SETTINGS))
-        }
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "AOD Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Keeps Always On Display running"
-            }
-
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
     }
 }
