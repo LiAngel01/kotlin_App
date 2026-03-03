@@ -9,14 +9,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var statusText: TextView
-    private lateinit var toggleButton: Button
-    
+    private lateinit var enableAODButton: Button
+
     private var isAODEnabled = false
 
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -25,32 +24,29 @@ class MainActivity : AppCompatActivity() {
         if (isGranted) {
             toggleAOD()
         } else {
-            Toast.makeText(this, "Notification permission required for AOD", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Notification permission required", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
-        setupViews()
-        updateStatus()
-    }
 
-    private fun setupViews() {
         statusText = findViewById(R.id.statusText)
-        toggleButton = findViewById(R.id.toggleButton)
-        
-        toggleButton.setOnClickListener {
+        enableAODButton = findViewById(R.id.enableAODButton)
+
+        enableAODButton.setOnClickListener {
             checkPermissionAndToggle()
         }
+
+        updateStatus()
     }
 
     private fun checkPermissionAndToggle() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
                 ContextCompat.checkSelfPermission(
-                    this, 
+                    this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     toggleAOD()
@@ -79,20 +75,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         statusText.text = if (isAODEnabled) {
-            "Status: Active\nTap button to disable"
+            "AOD Active"
         } else {
-            "Status: Inactive\nTap button to enable"
+            "AOD Disabled"
         }
-        
-        toggleButton.text = if (isAODEnabled) {
+
+        enableAODButton.text = if (isAODEnabled) {
             "Disable AOD"
         } else {
             "Enable AOD"
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateStatus()
     }
 }
