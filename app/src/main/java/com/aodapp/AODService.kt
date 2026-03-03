@@ -50,11 +50,7 @@ class AODService : Service() {
     )
 
     windowManager?.addView(overlayView, params)
-    Settings.System.putInt(
-    context.contentResolver,
-    Settings.System.SCREEN_BRIGHTNESS,
-    1
-    )
+    
 
     val clockText = overlayView!!.findViewById<TextView>(R.id.clockText)
 
