@@ -10,6 +10,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 
 class MainActivity : AppCompatActivity() {
 
@@ -59,19 +62,37 @@ class MainActivity : AppCompatActivity() {
             toggleAOD()
         }
     }
+    private fun checkOverlayPermission(): Boolean {
+    if (!Settings.canDrawOverlays(this)) {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName")
+        )
+        startActivity(intent)
+        Toast.makeText(this, "Enable 'Display over other apps'", Toast.LENGTH_LONG).show()
+        return false
+    }
+    return true
+    }
 
     private fun toggleAOD() {
-        if (isAODEnabled) {
-            AODService.stop(this)
-            isAODEnabled = false
-            Toast.makeText(this, "AOD Disabled", Toast.LENGTH_SHORT).show()
-        } else {
-            AODService.start(this)
-            isAODEnabled = true
-            Toast.makeText(this, "AOD Enabled - Lock screen to see it", Toast.LENGTH_LONG).show()
-        }
-        updateStatus()
+
+    if (!checkOverlayPermission()) {
+        return
     }
+
+    if (isAODEnabled) {
+        AODService.stop(this)
+        isAODEnabled = false
+        Toast.makeText(this, "AOD Disabled", Toast.LENGTH_SHORT).show()
+    } else {
+        AODService.start(this)
+        isAODEnabled = true
+        Toast.makeText(this, "AOD Enabled - Lock screen to see it", Toast.LENGTH_LONG).show()
+    }
+
+    updateStatus()
+}
 
     private fun updateStatus() {
         statusText.text = if (isAODEnabled) {
