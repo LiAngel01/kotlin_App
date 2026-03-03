@@ -1,15 +1,14 @@
 package com.aodapp
 
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.random.Random
 
 class AODActivity : AppCompatActivity() {
 
@@ -19,49 +18,45 @@ class AODActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Mostrar encima del lockscreen
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        // Pantalla completa
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Brillo mínimo
+        val params = window.attributes
+        params.screenBrightness = 0.01f
+        window.attributes = params
 
         setContentView(R.layout.activity_aod)
 
         clockText = findViewById(R.id.clockText)
 
         startClock()
-        startBurnInProtection()
     }
 
     private fun startClock() {
-        handler.post(object : Runnable {
+        val updateClock = object : Runnable {
             override fun run() {
-                val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-                clockText.text = sdf.format(Date())
-                handler.postDelayed(this, 1000)
+                val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+                clockText.text = time
+
+                // Movimiento leve anti burn-in
+                val randomX = (-20..20).random().toFloat()
+                val randomY = (-20..20).random().toFloat()
+                clockText.translationX = randomX
+                clockText.translationY = randomY
+
+                handler.postDelayed(this, 60000) // cada minuto
             }
-        })
+        }
+        updateClock.run()
     }
 
-    private fun startBurnInProtection() {
-        handler.postDelayed(object : Runnable {
-            override fun run() {
-                moveTextSlightly()
-                handler.postDelayed(this, 10000)
-            }
-        }, 10000)
-    }
-
-    private fun moveTextSlightly() {
-        val randomX = Random.nextInt(-20, 20).toFloat()
-        val randomY = Random.nextInt(-20, 20).toFloat()
-
-        clockText.translationX = randomX
-        clockText.translationY = randomY
-    }
-
-    override fun onBackPressed() {
-        // Bloquear botón atrás
+    // Salir con doble toque
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_DOWN) {
+            finish()
+        }
+        return super.onTouchEvent(event)
     }
 }
