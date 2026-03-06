@@ -8,15 +8,13 @@ class ScreenReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 
-        when (intent.action) {
+        if (intent.action == Intent.ACTION_SCREEN_OFF) {
 
-            Intent.ACTION_SCREEN_OFF -> {
-                AODService.showOverlay(context)
-            }
+            val i = Intent(context, AODActivity::class.java)
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-            Intent.ACTION_SCREEN_ON -> {
-                AODService.hideOverlay()
-            }
+            context.startActivity(i)
         }
+
     }
 }
