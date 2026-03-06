@@ -2,30 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-
-        <receiver android:name=".ScreenReceiver">
-        <intent-filter>
-        <action android:name="android.intent.action.SCREEN_OFF"/>
-        </intent-filter>
-        </receiver>
-        
         android:allowBackup="true"
         android:label="Simple AOD"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <service
-        android:name=".AODDreamService"
-        android:exported="true"
-        android:permission="android.permission.BIND_DREAM_SERVICE">
-            
-        <intent-filter>
-        <action android:name="android.service.dreams.DreamService" />
-        </intent-filter>
+        <receiver android:name=".ScreenReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_OFF"/>
+            </intent-filter>
+        </receiver>
 
-       <meta-data
-        android:name="android.service.dream"
-        android:resource="@xml/dream_config" />
-       </service>
+        <service
+            android:name=".AODDreamService"
+            android:exported="true"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.dream"
+                android:resource="@xml/dream_config" />
+        </service>
 
         <activity
             android:name=".AODActivity"
