@@ -6,10 +6,14 @@
         android:label="Simple AOD"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <receiver android:name=".ScreenReceiver">
+        <receiver
+            android:name=".ScreenReceiver"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.SCREEN_OFF"/>
             </intent-filter>
+
         </receiver>
 
         <service
