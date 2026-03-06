@@ -11,10 +11,10 @@ class ScreenReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_SCREEN_OFF) {
 
             val i = Intent(context, AODActivity::class.java)
+
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
             context.startActivity(i)
         }
-
     }
 }
