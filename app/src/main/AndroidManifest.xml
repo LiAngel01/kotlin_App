@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+
+        <receiver android:name=".ScreenReceiver">
+        <intent-filter>
+        <action android:name="android.intent.action.SCREEN_OFF"/>
+        </intent-filter>
+        </receiver>
+        
         android:allowBackup="true"
         android:label="Simple AOD"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
