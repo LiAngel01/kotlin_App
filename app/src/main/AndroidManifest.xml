@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:allowBackup="true"
         android:label="Simple AOD"
@@ -16,31 +18,21 @@
 
         </receiver>
 
-        <service
-            android:name=".AODDreamService"
-            android:exported="true"
-            android:permission="android.permission.BIND_DREAM_SERVICE">
-
-            <intent-filter>
-                <action android:name="android.service.dreams.DreamService" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.service.dream"
-                android:resource="@xml/dream_config" />
-        </service>
-
         <activity
             android:name=".AODActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true"/>
 
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+
             </intent-filter>
 
         </activity>
