@@ -1,16 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:gravity="center">
 
     <TextView
         android:id="@+id/clockText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#BBBBBB"
-        android:textSize="70sp"/>
+        android:text="12:00"
+        android:textSize="64sp"
+        android:textColor="#FFFFFF"/>
+
+    <TextView
+        android:id="@+id/dateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="date"
+        android:textSize="18sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="10dp"/>
+
+    <TextView
+        android:id="@+id/batteryText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Battery"
+        android:textSize="18sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/chargeTimeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Charging time"
+        android:textSize="18sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="5dp"/>
 
 </LinearLayout>
