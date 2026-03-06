@@ -26,6 +26,12 @@ class AODActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        window.addFlags(
+        android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+        android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+        android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+        )
         super.onCreate(savedInstanceState)
 
         window.decorView.systemUiVisibility =
