@@ -1,29 +1,25 @@
 package com.aodapp
 
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var receiver: ScreenReceiver
-
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
 
-        val startButton = findViewById<Button>(R.id.startButton)
+        val button = findViewById<Button>(R.id.button)
 
-        receiver = ScreenReceiver()
+        button.setOnClickListener {
 
-        startButton.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_DREAM_SETTINGS))
 
-            val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-
-            registerReceiver(receiver, filter)
         }
     }
 }
