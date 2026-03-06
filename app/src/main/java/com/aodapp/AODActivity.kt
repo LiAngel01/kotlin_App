@@ -7,7 +7,6 @@ import android.os.BatteryManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.WindowManager
 import android.widget.TextView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -17,6 +16,7 @@ class AODActivity : Activity() {
     private lateinit var clockText: TextView
     private lateinit var dateText: TextView
     private lateinit var batteryText: TextView
+    private lateinit var chargeTimeText: TextView
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -25,47 +25,63 @@ class AODActivity : Activity() {
 
         setContentView(R.layout.activity_aod)
 
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
-
         clockText = findViewById(R.id.clockText)
         dateText = findViewById(R.id.dateText)
         batteryText = findViewById(R.id.batteryText)
+        chargeTimeText = findViewById(R.id.chargeTimeText)
 
-        updateClock()
+        updateInfo()
     }
 
-    private fun updateClock() {
+    private fun updateInfo() {
 
         handler.post(object : Runnable {
 
             override fun run() {
 
-                val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-                val date = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
+                val now = Date()
+
+                val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
+                val date = SimpleDateFormat("EEE, dd MMM", Locale.getDefault()).format(now)
 
                 clockText.text = time
                 dateText.text = date
 
-                updateBattery()
+                val batteryStatus = registerReceiver(
+                    null,
+                    IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                )
 
-                handler.postDelayed(this, 60000)
+                val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+                val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+
+                val percent = level * 100 / scale
+
+                batteryText.text = "Battery: $percent%"
+
+                val chargeTime = batteryStatus?.getIntExtra(
+                    BatteryManager.EXTRA_CHARGE_TIME_REMAINING,
+                    -1
+                ) ?: -1
+
+                if (chargeTime > 0) {
+
+                    val minutes = chargeTime / 60000
+
+                    chargeTimeText.text = "Full in $minutes min"
+
+                } else {
+
+                    chargeTimeText.text = "Charging..."
+
+                }
+
+                handler.postDelayed(this, 30000)
+
             }
+
         })
+
     }
 
-    private fun updateBattery() {
-
-        val batteryIntent = registerReceiver(
-            null,
-            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        )
-
-        val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-
-        batteryText.text = "Battery $level%"
-    }
 }
